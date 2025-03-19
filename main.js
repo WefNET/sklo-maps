@@ -84,35 +84,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const jsonData = JSON.parse(jsonMatch[0]);
 
-        // Get map's current resolution and bounds
-        const mapExtent = map.getView().calculateExtent();
-        const mapWidth = mapExtent[2] - mapExtent[0];
-        const mapHeight = mapExtent[3] - mapExtent[1];
-
-        console.log("Map extent:", mapExtent);
-        console.log("Map width:", mapWidth);
-        console.log("Map height:", mapHeight);
-
-        console.log(map.XYZ)
-
         jsonData.forEach(deed => {
             // Scale and flip the coordinates based on the map's extent
-            const x = deed.x;  // Scale x coordinate for 8192 size
-            const y = 4096 - deed.y; // Scale and flip y coordinate for 8192 size
-
-            // console.log(deed.name, x, y);
-
-            // Create a feature for each deed and add to vector source
+            const centerX = deed.x;
+            const centerY = 4096 - deed.y; // Scale and flip y coordinate for 8192 size
+        
+            // Calculate the four corners of the deed box
+            const topLeft = [centerX - deed.tilesWest, centerY + deed.tilesNorth];
+            const topRight = [centerX + deed.tilesEast, centerY + deed.tilesNorth];
+            const bottomRight = [centerX + deed.tilesEast, centerY - deed.tilesSouth];
+            const bottomLeft = [centerX - deed.tilesWest, centerY - deed.tilesSouth];
+        
+            // Create a polygon feature using the corner coordinates
             const feature = new ol.Feature({
-                geometry: new ol.geom.Point([x, y]),
+                geometry: new ol.geom.Polygon([[topLeft, topRight, bottomRight, bottomLeft, topLeft]]), // Close the box
                 name: deed.name,
                 mayor: deed.mayor,
                 x: deed.x,
                 y: deed.y,
             });
-
+        
+            // Apply a style to the polygon (red border, transparent fill)
+            feature.setStyle(new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(214, 226, 223, 0.4)'
+                })
+            }));
+        
             vectorSource.addFeature(feature);
         });
+        
     })
     .catch(error => console.error("Error loading deed data:", error));
 
@@ -141,12 +142,3 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 });
-
-function getBoxCorners(centerX, centerY, tilesNorth, tilesSouth, tilesEast, tilesWest) {
-    return {
-        topLeft: { x: centerX - tilesWest, y: centerY + tilesNorth },
-        topRight: { x: centerX + tilesEast, y: centerY + tilesNorth },
-        bottomLeft: { x: centerX - tilesWest, y: centerY - tilesSouth },
-        bottomRight: { x: centerX + tilesEast, y: centerY - tilesSouth }
-    };
-}
