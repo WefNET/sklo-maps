@@ -94,9 +94,23 @@ document.addEventListener("DOMContentLoaded", function () {
             const bottomRight = [centerX + deed.tilesEast, centerY - deed.tilesSouth];
             const bottomLeft = [centerX - deed.tilesWest, centerY - deed.tilesSouth];
 
-            // Create a polygon feature using the corner coordinates
-            const feature = new ol.Feature({
+            // Create the inner polygon feature (original deed)
+            const innerFeature = new ol.Feature({
                 geometry: new ol.geom.Polygon([[topLeft, topRight, bottomRight, bottomLeft, topLeft]]), // Close the box
+            });
+
+            innerFeature.setStyle(new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(214, 226, 223, 0.3)'
+                })
+            }));
+
+            // Generate expanded outer polygon
+            const outerCoords = expandBoundingBox([[topLeft, topRight, bottomRight, bottomLeft]], deed.tilesPerimeter);
+
+            // Create the outer polygon feature (stroke-only)
+            const outerFeature = new ol.Feature({
+                geometry: new ol.geom.Polygon(outerCoords),
                 name: deed.name,
                 mayor: deed.mayor,
                 x: deed.x,
@@ -104,14 +118,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 lastActive: deed.lastActive,
             });
 
-            feature.setStyle(new ol.style.Style({
+            outerFeature.setStyle(new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(218, 112, 70, 0.62)',
+                    width: 2, // Width of stroke
+                }),
                 fill: new ol.style.Fill({
-                    color: 'rgba(214, 226, 223, 0.3)'
+                    color: 'rgba(0, 0, 0, 0)' // Fully transparent fill
                 })
             }));
 
-            vectorSource.addFeature(feature);
+            // Add both features to the vector source
+            vectorSource.addFeature(innerFeature);
+            vectorSource.addFeature(outerFeature);
         });
+
     })
     .catch(error => console.error("Error loading deed data:", error));
 
@@ -144,3 +165,13 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 });
+
+function expandBoundingBox(coords, padding) {
+    return coords.map(coord => [
+        [coord[0][0] - padding, coord[0][1] + padding], // Expand top-left UP & LEFT
+        [coord[1][0] + padding, coord[1][1] + padding], // Expand top-right UP & RIGHT
+        [coord[2][0] + padding, coord[2][1] - padding], // Expand bottom-right DOWN & RIGHT
+        [coord[3][0] - padding, coord[3][1] - padding], // Expand bottom-left DOWN & LEFT
+        [coord[0][0] - padding, coord[0][1] + padding]  // Close the polygon
+    ]);
+}
