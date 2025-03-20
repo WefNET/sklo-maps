@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             outerFeature.setStyle(new ol.style.Style({
                 stroke: new ol.style.Stroke({
-                    color: 'rgba(218, 112, 70, 0.62)',
+                    color: 'rgba(255, 72, 0, 0.8)',
                     width: 2, // Width of stroke
                 }),
                 fill: new ol.style.Fill({
