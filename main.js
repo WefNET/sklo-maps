@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }),
         new ol.control.Zoom(),
-        new ol.control.FullScreen(),
     ];
 
     const tileGrid = new ol.tilegrid.TileGrid({
@@ -88,13 +87,13 @@ document.addEventListener("DOMContentLoaded", function () {
             // Scale and flip the coordinates based on the map's extent
             const centerX = deed.x;
             const centerY = 4096 - deed.y; // Scale and flip y coordinate for 8192 size
-        
+
             // Calculate the four corners of the deed box
             const topLeft = [centerX - deed.tilesWest, centerY + deed.tilesNorth];
             const topRight = [centerX + deed.tilesEast, centerY + deed.tilesNorth];
             const bottomRight = [centerX + deed.tilesEast, centerY - deed.tilesSouth];
             const bottomLeft = [centerX - deed.tilesWest, centerY - deed.tilesSouth];
-        
+
             // Create a polygon feature using the corner coordinates
             const feature = new ol.Feature({
                 geometry: new ol.geom.Polygon([[topLeft, topRight, bottomRight, bottomLeft, topLeft]]), // Close the box
@@ -104,17 +103,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 y: deed.y,
                 lastActive: deed.lastActive,
             });
-        
-            // Apply a style to the polygon (red border, transparent fill)
+
             feature.setStyle(new ol.style.Style({
                 fill: new ol.style.Fill({
-                    color: 'rgba(214, 226, 223, 0.4)'
+                    color: 'rgba(214, 226, 223, 0.3)'
                 })
             }));
-        
+
             vectorSource.addFeature(feature);
         });
-        
     })
     .catch(error => console.error("Error loading deed data:", error));
 
@@ -123,10 +120,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectInteraction = new ol.interaction.Select({
             condition: ol.events.condition.click, // Trigger on click
         });
-    
+
         // Add the select interaction to the map
         map.addInteraction(selectInteraction);
-    
+
         // Listen to the 'select' event and display the feature details
         selectInteraction.on('select', function (event) {
             const selectedFeature = event.selected[0]; // Get the selected feature
@@ -138,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const xCoord = selectedFeature.get('x');
                 const yCoord = selectedFeature.get('y');
                 const lastActive = selectedFeature.get('lastActive');
-    
+
                 // Update the details in the HTML
                 document.getElementById('deed-name').innerText = `Name: ${deedName}`;
                 document.getElementById('deed-mayor').innerText = `Mayor: ${mayor}`;
