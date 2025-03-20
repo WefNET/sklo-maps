@@ -102,6 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 mayor: deed.mayor,
                 x: deed.x,
                 y: deed.y,
+                lastActive: deed.lastActive,
             });
         
             // Apply a style to the polygon (red border, transparent fill)
@@ -129,16 +130,20 @@ document.addEventListener("DOMContentLoaded", function () {
         // Listen to the 'select' event and display the feature details
         selectInteraction.on('select', function (event) {
             const selectedFeature = event.selected[0]; // Get the selected feature
+            console.log(selectedFeature);
+
             if (selectedFeature) {
                 const deedName = selectedFeature.get('name');
                 const mayor = selectedFeature.get('mayor');
                 const xCoord = selectedFeature.get('x');
                 const yCoord = selectedFeature.get('y');
+                const lastActive = selectedFeature.get('lastActive');
     
                 // Update the details in the HTML
                 document.getElementById('deed-name').innerText = `Name: ${deedName}`;
                 document.getElementById('deed-mayor').innerText = `Mayor: ${mayor}`;
                 document.getElementById('deed-coordinates').innerText = `Coordinates: (${xCoord}, ${yCoord})`;
+                document.getElementById('deed-lastActive').innerText = lastActive ? `Last Active: ${lastActive}` : 'Last Active: Unknown';
             }
         });
 });
