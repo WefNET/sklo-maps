@@ -47,8 +47,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }),
     });
 
-    const vectorSource = new ol.source.Vector();
-
     // Vector Layer to display the deed markers
     const vectorLayer = new ol.layer.Vector({
         source: vectorSource,
@@ -96,7 +94,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Create the inner polygon feature (original deed)
             const innerFeature = new ol.Feature({
-                geometry: new ol.geom.Polygon([[topLeft, topRight, bottomRight, bottomLeft, topLeft]]), // Close the box
+                geometry: new ol.geom.Polygon([[topLeft, topRight, bottomRight, bottomLeft, topLeft]]),
+                name: deed.name,
+                mayor: deed.mayor,
+                x: deed.x,
+                y: deed.y,
+                lastActive: deed.lastActive,
             });
 
             innerFeature.setStyle(new ol.style.Style({
@@ -127,6 +130,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     color: 'rgba(0, 0, 0, 0)' // Fully transparent fill
                 })
             }));
+
+            // store for toggle
+            outerFeatures.push(outerFeature);
 
             // Add both features to the vector source
             vectorSource.addFeature(innerFeature);
@@ -175,3 +181,20 @@ function expandBoundingBox(coords, padding) {
         [coord[0][0] - padding, coord[0][1] + padding]  // Close the polygon
     ]);
 }
+
+let vectorSource = new ol.source.Vector();
+let outerFeatures = []; 
+let outerFeaturesVisible = true;
+
+// Toggle function for all outer polygons
+function toggleOuterFeatures() {
+    if (outerFeaturesVisible) {
+        outerFeatures.forEach(feature => vectorSource.removeFeature(feature));
+    } else {
+        outerFeatures.forEach(feature => vectorSource.addFeature(feature));
+    }
+    outerFeaturesVisible = !outerFeaturesVisible;
+}
+
+// Example: Toggle all outer features when clicking a button
+document.getElementById('toggleButton').addEventListener('click', toggleOuterFeatures);;
