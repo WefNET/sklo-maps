@@ -189,6 +189,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById('deed-lastActive').innerText = lastActive ? `Last Active: ${lastActive}` : 'Last Active: Unknown';
             }
         });
+
+    document.getElementById('togglePerimeters').addEventListener('click', () => 
+        toggleFeatures(perimeterFeatures, perimeterFeaturesVisible)
+    );
+
+    document.getElementById('toggleTowers').addEventListener('click', () => 
+        toggleFeatures(towerFeatures, towerFeaturesVisible)
+    );
 });
 
 const getControls = () => {
@@ -235,11 +243,3 @@ function toggleFeatures(featureArray, isVisible) {
     }
     isVisible.value = !isVisible.value;
 }
-
-document.getElementById('togglePerimeters').addEventListener('click', () => 
-    toggleFeatures(perimeterFeatures, perimeterFeaturesVisible)
-);
-
-document.getElementById('toggleTowers').addEventListener('click', () => 
-    toggleFeatures(towerFeatures, towerFeaturesVisible)
-);
