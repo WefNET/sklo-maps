@@ -6,22 +6,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // Compute resolutions (pixels per tile) based on maxMapSize
     const resolutions = zoomLevels.map(z => maxMapSize / z);
 
-    var mapExtent = [0.00000000, 4096.00000000, 4096.00000000, 0.00000000];
-
-    var controls = [
-        new ol.control.MousePosition({
-            undefinedHTML: 'outside',
-            coordinateFormat: function (coordinate) {
-                const x = coordinate[0];
-                const y = 4096 - coordinate[1];
-
-                // return ol.coordinate.format(coordinate, '{x}, {y}', 0);
-                return `(${x.toFixed(0)}, ${y.toFixed(0)})`;
-            }
-        }),
-        new ol.control.Zoom(),
-    ];
-
     const tileGrid = new ol.tilegrid.TileGrid({
         resolutions: resolutions,
         tileSize: tileSize, // 256x256 tiles
@@ -50,18 +34,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // Vector Layer to display the deed markers
     const vectorLayer = new ol.layer.Vector({
         source: vectorSource,
-        style: new ol.style.Style({
-            image: new ol.style.Circle({
-                radius: 2,
-                fill: new ol.style.Fill({ color: 'red' }),
-                stroke: new ol.style.Stroke({ color: 'white', width: 2 }),
-            }),
-        }),
     });
 
     const map = new ol.Map({
         target: 'map',
-        controls: controls,
+        controls: getControls(),
         layers: [
             tileLayer,
             vectorLayer,
@@ -93,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const bottomLeft = [centerX - deed.tilesWest, centerY - deed.tilesSouth];
 
             // Create the inner polygon feature (original deed)
-            const innerFeature = new ol.Feature({
+            const deedFeature = new ol.Feature({
                 geometry: new ol.geom.Polygon([[topLeft, topRight, bottomRight, bottomLeft, topLeft]]),
                 name: deed.name,
                 mayor: deed.mayor,
@@ -102,7 +79,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 lastActive: deed.lastActive,
             });
 
-            innerFeature.setStyle(new ol.style.Style({
+            deedFeature.setStyle(new ol.style.Style({
                 fill: new ol.style.Fill({
                     color: 'rgba(214, 226, 223, 0.3)'
                 })
@@ -112,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const outerCoords = expandBoundingBox([[topLeft, topRight, bottomRight, bottomLeft]], deed.tilesPerimeter);
 
             // Create the outer polygon feature (stroke-only)
-            const outerFeature = new ol.Feature({
+            const perimeterFeature = new ol.Feature({
                 geometry: new ol.geom.Polygon(outerCoords),
                 name: deed.name,
                 mayor: deed.mayor,
@@ -121,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 lastActive: deed.lastActive,
             });
 
-            outerFeature.setStyle(new ol.style.Style({
+            perimeterFeature.setStyle(new ol.style.Style({
                 stroke: new ol.style.Stroke({
                     color: 'rgba(255, 72, 0, 0.8)',
                     width: 2, // Width of stroke
@@ -132,15 +109,55 @@ document.addEventListener("DOMContentLoaded", function () {
             }));
 
             // store for toggle
-            outerFeatures.push(outerFeature);
+            perimeterFeatures.push(perimeterFeature);
 
             // Add both features to the vector source
-            vectorSource.addFeature(innerFeature);
-            vectorSource.addFeature(outerFeature);
+            vectorSource.addFeature(deedFeature);
+            vectorSource.addFeature(perimeterFeature);
         });
 
     })
     .catch(error => console.error("Error loading deed data:", error));
+
+    fetch('./towers.json')
+    .then(response => response.text())
+    .then(text => {
+        const jsonMatch = text.match(/\[.*\]/s);
+        if (!jsonMatch) throw new Error("Invalid JSON format");
+
+        const jsonData = JSON.parse(jsonMatch[0]);
+
+        jsonData.forEach(tower => {
+            const centerX = tower.x;
+            const centerY = 4096 - tower.y;
+
+            // Create a circular feature with a radius of 25
+            const towerFeature = new ol.Feature({
+                geometry: new ol.geom.Circle([centerX, centerY], 25),
+                type: 'tower',
+                creator: tower.creatorName,
+                name: tower.towerName,
+                x: tower.x,
+                y: tower.y,
+                guards: tower.maxGuards,
+            });
+
+            towerFeature.setStyle(new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(238, 255, 0, 0.3)'
+                }),
+                // stroke: new ol.style.Stroke({
+                //     color: 'rgba(255, 0, 0, 0.8)',
+                //     width: 1
+                // })
+            }));
+
+            towerFeatures.push(towerFeature);
+
+            vectorSource.addFeature(towerFeature);
+        });
+    })
+    .catch(error => console.error("Error loading tower data:", error));
 
 
         // Add a Select interaction to handle feature clicks
@@ -172,6 +189,24 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 });
 
+const getControls = () => {
+    var controls = [
+        new ol.control.MousePosition({
+            undefinedHTML: 'outside',
+            coordinateFormat: function (coordinate) {
+                const x = coordinate[0];
+                const y = 4096 - coordinate[1];
+
+                // return ol.coordinate.format(coordinate, '{x}, {y}', 0);
+                return `(${x.toFixed(0)}, ${y.toFixed(0)})`;
+            }
+        }),
+        new ol.control.Zoom(),
+    ];
+
+    return controls;
+}
+
 function expandBoundingBox(coords, padding) {
     return coords.map(coord => [
         [coord[0][0] - padding, coord[0][1] + padding], // Expand top-left UP & LEFT
@@ -183,18 +218,34 @@ function expandBoundingBox(coords, padding) {
 }
 
 let vectorSource = new ol.source.Vector();
-let outerFeatures = []; 
-let outerFeaturesVisible = true;
+let perimeterFeatures = []; 
+let perimeterFeaturesVisible = true;
+
+let towerFeatures = [];
+let towerFeaturesVisible = true;
 
 // Toggle function for all outer polygons
-function toggleOuterFeatures() {
-    if (outerFeaturesVisible) {
-        outerFeatures.forEach(feature => vectorSource.removeFeature(feature));
+function togglePerimeterFeatures() {
+    if (perimeterFeaturesVisible) {
+        perimeterFeatures.forEach(feature => vectorSource.removeFeature(feature));
     } else {
-        outerFeatures.forEach(feature => vectorSource.addFeature(feature));
+        perimeterFeatures.forEach(feature => vectorSource.addFeature(feature));
     }
-    outerFeaturesVisible = !outerFeaturesVisible;
+    perimeterFeaturesVisible = !perimeterFeaturesVisible;
 }
 
 // Example: Toggle all outer features when clicking a button
-document.getElementById('toggleButton').addEventListener('click', toggleOuterFeatures);;
+document.getElementById('togglePerimeters').addEventListener('click', togglePerimeterFeatures);
+
+
+function toggleTowerFeatures() {
+    if (towerFeaturesVisible) {
+        towerFeatures.forEach(feature => vectorSource.removeFeature(feature));
+    } else {
+        towerFeatures.forEach(feature => vectorSource.addFeature(feature));
+    }
+    towerFeaturesVisible = !towerFeaturesVisible;
+}
+
+// Example: Toggle all outer features when clicking a button
+document.getElementById('toggleTowers').addEventListener('click', toggleTowerFeatures);
