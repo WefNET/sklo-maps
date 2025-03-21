@@ -79,9 +79,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 lastActive: deed.lastActive,
             });
 
+            const fillColor = deed.isSpawnPoint ? 'rgba(2, 224, 253, 0.64)' : 'rgba(214, 226, 223, 0.3)';
+
             deedFeature.setStyle(new ol.style.Style({
                 fill: new ol.style.Fill({
-                    color: 'rgba(214, 226, 223, 0.3)'
+                    color: fillColor
                 })
             }));
 
