@@ -220,34 +220,26 @@ function expandBoundingBox(coords, padding) {
 }
 
 let vectorSource = new ol.source.Vector();
-let perimeterFeatures = []; 
-let perimeterFeaturesVisible = true;
 
+let perimeterFeatures = [];
 let towerFeatures = [];
-let towerFeaturesVisible = true;
 
-// Toggle function for all outer polygons
-function togglePerimeterFeatures() {
-    if (perimeterFeaturesVisible) {
-        perimeterFeatures.forEach(feature => vectorSource.removeFeature(feature));
+let perimeterFeaturesVisible = { value: true };
+let towerFeaturesVisible = { value: true };
+
+function toggleFeatures(featureArray, isVisible) {
+    if (isVisible.value) {
+        featureArray.forEach(feature => vectorSource.removeFeature(feature));
     } else {
-        perimeterFeatures.forEach(feature => vectorSource.addFeature(feature));
+        featureArray.forEach(feature => vectorSource.addFeature(feature));
     }
-    perimeterFeaturesVisible = !perimeterFeaturesVisible;
+    isVisible.value = !isVisible.value;
 }
 
-// Example: Toggle all outer features when clicking a button
-document.getElementById('togglePerimeters').addEventListener('click', togglePerimeterFeatures);
+document.getElementById('togglePerimeters').addEventListener('click', () => 
+    toggleFeatures(perimeterFeatures, perimeterFeaturesVisible)
+);
 
-
-function toggleTowerFeatures() {
-    if (towerFeaturesVisible) {
-        towerFeatures.forEach(feature => vectorSource.removeFeature(feature));
-    } else {
-        towerFeatures.forEach(feature => vectorSource.addFeature(feature));
-    }
-    towerFeaturesVisible = !towerFeaturesVisible;
-}
-
-// Example: Toggle all outer features when clicking a button
-document.getElementById('toggleTowers').addEventListener('click', toggleTowerFeatures);
+document.getElementById('toggleTowers').addEventListener('click', () => 
+    toggleFeatures(towerFeatures, towerFeaturesVisible)
+);
