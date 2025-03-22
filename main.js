@@ -212,7 +212,7 @@ const initailizeMap = () => {
                 document.getElementById('deed-name').innerText = `Name: ${deedName}`;
                 document.getElementById('deed-mayor').innerText = `Mayor: ${mayor}`;
                 document.getElementById('deed-coordinates').innerText = `Coordinates: (${xCoord}, ${yCoord})`;
-                document.getElementById('deed-lastActive').innerText = lastActive ? `Last Active: ${lastActive}` : 'Last Active: Unknown';
+                document.getElementById('deed-lastActive').innerText = lastActive ? `${lastActive}` : 'Unknown';
             }
         });
 
