@@ -206,6 +206,23 @@ const initailizeMap = () => {
         vectorSource.addFeature(highwayFeature);
     });
 
+    const markerSource = new ol.source.Vector();
+    const markerLayer = new ol.layer.Vector({
+        source: markerSource,
+        style: new ol.style.Style({
+            image: new ol.style.Icon({
+                anchor: [0.5, 0.5], // Center-bottom anchoring (good for markers)
+                anchorXUnits: 'fraction', // Uses a fraction of the image width
+                anchorYUnits: 'fraction', // Uses a fraction of the image height
+                src: 'marker.png', // Ensure this path is correct
+                scale: 0.02 // Adjust size (2048px is very large, so a small scale is needed)
+            })
+        })
+    });
+
+    // Add the marker layer to the map
+    map.addLayer(markerLayer);
+
 
     // Add a Select interaction to handle feature clicks
     const selectInteraction = new ol.interaction.Select({
@@ -218,16 +235,40 @@ const initailizeMap = () => {
     // Listen to the 'select' event and display the feature details
     selectInteraction.on('select', function (event) {
         const selectedFeature = event.selected[0]; // Get the selected feature
-        // console.log(selectedFeature);
 
-        const type = selectedFeature.get('type');
+        if (selectedFeature) {
+            const type = selectedFeature.get('type');
 
-        if (type === 'deed') {
-            showDeedFeature(selectedFeature);
-        } else if (type === 'tower') {
-            showTowerFeature(selectedFeature);
-        } else {
-            console.log("Unknown feature type:", type);
+            if (type === 'deed') {
+                showDeedFeature(selectedFeature);
+            } else if (type === 'tower') {
+                showTowerFeature(selectedFeature);
+            } else {
+                console.log("Unknown feature type:", type);
+            }
+        }
+    });
+
+    map.on('click', function (event) {
+        const pixel = map.getEventPixel(event.originalEvent);
+        const feature = map.forEachFeatureAtPixel(pixel, function (feat) {
+            return feat;
+        });
+
+        if (!feature) {
+            markerSource.clear();
+
+            const coordinate = event.coordinate; // Get the clicked coordinates
+
+            const markerFeature = new ol.Feature({
+                geometry: new ol.geom.Point(coordinate),
+            });
+
+            // Add marker to the vector source
+            markerSource.addFeature(markerFeature);
+
+            document.getElementById('details').innerHTML = `
+                <p><strong>Clicked at:</strong> ${coordinate[0].toFixed(0)}, ${coordinate[1].toFixed(0)}</p>`;
         }
     });
 
