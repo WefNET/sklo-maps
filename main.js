@@ -73,148 +73,153 @@ const initailizeMap = () => {
     });
 
     deeds.forEach(deed => {
-            // Scale and flip the coordinates based on the map's extent
-            const centerX = deed.x;
-            const centerY = 4096 - deed.y; // Scale and flip y coordinate for 8192 size
+        // Scale and flip the coordinates based on the map's extent
+        const centerX = deed.x;
+        const centerY = 4096 - deed.y; // Scale and flip y coordinate for 8192 size
 
-            // Calculate the four corners of the deed box
-            const topLeft = [centerX - deed.tilesWest, centerY + deed.tilesNorth];
-            const topRight = [centerX + deed.tilesEast, centerY + deed.tilesNorth];
-            const bottomRight = [centerX + deed.tilesEast, centerY - deed.tilesSouth];
-            const bottomLeft = [centerX - deed.tilesWest, centerY - deed.tilesSouth];
+        // Calculate the four corners of the deed box
+        const topLeft = [centerX - deed.tilesWest, centerY + deed.tilesNorth];
+        const topRight = [centerX + deed.tilesEast, centerY + deed.tilesNorth];
+        const bottomRight = [centerX + deed.tilesEast, centerY - deed.tilesSouth];
+        const bottomLeft = [centerX - deed.tilesWest, centerY - deed.tilesSouth];
 
             // Create the inner polygon feature (original deed)
-            const deedFeature = new ol.Feature({
-                geometry: new ol.geom.Polygon([[topLeft, topRight, bottomRight, bottomLeft, topLeft]]),
-                name: deed.name,
-                mayor: deed.mayor,
-                x: deed.x,
-                y: deed.y,
-                lastActive: deed.lastActive,
-            });
-
-            const fillColor = deed.isSpawnPoint ? 'rgba(2, 224, 253, 0.64)' : 'rgba(214, 226, 223, 0.3)';
-
-            deedFeature.setStyle(new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: fillColor
-                })
-            }));
-
-            // Generate expanded outer polygon
-            const outerCoords = expandBoundingBox([[topLeft, topRight, bottomRight, bottomLeft]], deed.tilesPerimeter);
-
-            // Create the outer polygon feature (stroke-only)
-            const perimeterFeature = new ol.Feature({
-                geometry: new ol.geom.Polygon(outerCoords),
-                name: deed.name,
-                mayor: deed.mayor,
-                x: deed.x,
-                y: deed.y,
-                lastActive: deed.lastActive,
-            });
-
-            perimeterFeature.setStyle(new ol.style.Style({
-                stroke: new ol.style.Stroke({
-                    color: 'rgba(255, 0, 0, 0.44)',
-                    width: 1, // Width of stroke
-                }),
-                fill: new ol.style.Fill({
-                    color: 'rgba(0, 0, 0, 0)' // Fully transparent fill
-                })
-            }));
-
-            // store for toggle
-            perimeterFeatures.push(perimeterFeature);
-
-            // Add both features to the vector source
-            vectorSource.addFeature(deedFeature);
-            vectorSource.addFeature(perimeterFeature);
+        const deedFeature = new ol.Feature({
+            geometry: new ol.geom.Polygon([[topLeft, topRight, bottomRight, bottomLeft, topLeft]]),
+            name: deed.name,
+            mayor: deed.mayor,
+            x: deed.x,
+            y: deed.y,
+            lastActive: deed.lastActive,
         });
 
-        guard_towers.forEach(tower => {
-            const centerX = tower.x;
-            const centerY = 4096 - tower.y;
+        const fillColor = deed.isSpawnPoint ? 'rgba(2, 224, 253, 0.64)' : 'rgba(214, 226, 223, 0.3)';
 
-            // Create a circular feature with a radius of 25
-            const towerFeature = new ol.Feature({
-                geometry: new ol.geom.Circle([centerX, centerY], 25),
-                type: 'tower',
-                creator: tower.creatorName,
-                name: tower.towerName,
-                x: tower.x,
-                y: tower.y,
-                guards: tower.maxGuards,
-            });
+        deedFeature.setStyle(new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: fillColor
+            })
+        }));
 
-            towerFeature.setStyle(new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: 'rgba(238, 255, 0, 0.3)'
-                }),
-                // stroke: new ol.style.Stroke({
-                //     color: 'rgba(255, 0, 0, 0.8)',
-                //     width: 1
-                // })
-            }));
+        // Generate expanded outer polygon
+        const outerCoords = expandBoundingBox([[topLeft, topRight, bottomRight, bottomLeft]], deed.tilesPerimeter);
 
-            towerFeatures.push(towerFeature);
-
-            vectorSource.addFeature(towerFeature);
+        // Create the outer polygon feature (stroke-only)
+        const perimeterFeature = new ol.Feature({
+            geometry: new ol.geom.Polygon(outerCoords),
+            name: deed.name,
+            mayor: deed.mayor,
+            x: deed.x,
+            y: deed.y,
+            lastActive: deed.lastActive,
         });
 
-        highways.forEach(highway => {
-            const startX = highway.startX;
-            const startY = 4096 - highway.startY;
-            const endX = highway.endX;
-            const endY = 4096 - highway.endY;
+        perimeterFeature.setStyle(new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'rgba(255, 0, 0, 0.44)',
+                width: 1, // Width of stroke
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(0, 0, 0, 0)' // Fully transparent fill
+            })
+        }));
 
-            const highwayFeature = new ol.Feature({
-                geometry: new ol.geom.LineString([[startX, startY], [endX, endY]]),
-                type: 'highway',
-            });
+        // store for toggle
+        deedFeatures.push(deedFeature);
+        perimeterFeatures.push(perimeterFeature);
 
-            highway.type
+        // Add both features to the vector source
+        vectorSource.addFeature(deedFeature);
+        vectorSource.addFeature(perimeterFeature);
+    });
 
-            highwayFeature.setStyle(new ol.style.Style({
-                stroke: new ol.style.Stroke({
-                    color: getHighwayColor(highway.type),
-                    width: 3
-                })
-            }));
+    guard_towers.forEach(tower => {
+        const centerX = tower.x;
+        const centerY = 4096 - tower.y;
 
-            highwayFeatures.push(highwayFeature);
-
-            vectorSource.addFeature(highwayFeature);
+        // Create a circular feature with a radius of 25
+        const towerFeature = new ol.Feature({
+            geometry: new ol.geom.Circle([centerX, centerY], 25),
+            type: 'tower',
+            creator: tower.creatorName,
+            name: tower.towerName,
+            x: tower.x,
+            y: tower.y,
+            guards: tower.maxGuards,
         });
 
+        towerFeature.setStyle(new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgba(238, 255, 0, 0.3)'
+            }),
+            // stroke: new ol.style.Stroke({
+            //     color: 'rgba(255, 0, 0, 0.8)',
+            //     width: 1
+            // })
+        }));
 
-        // Add a Select interaction to handle feature clicks
-        const selectInteraction = new ol.interaction.Select({
-            condition: ol.events.condition.click, // Trigger on click
+        towerFeatures.push(towerFeature);
+
+        vectorSource.addFeature(towerFeature);
+    });
+
+    highways.forEach(highway => {
+        const startX = highway.startX;
+        const startY = 4096 - highway.startY;
+        const endX = highway.endX;
+        const endY = 4096 - highway.endY;
+
+        const highwayFeature = new ol.Feature({
+            geometry: new ol.geom.LineString([[startX, startY], [endX, endY]]),
+            type: 'highway',
         });
 
-        // Add the select interaction to the map
-        map.addInteraction(selectInteraction);
+        highway.type
 
-        // Listen to the 'select' event and display the feature details
-        selectInteraction.on('select', function (event) {
-            const selectedFeature = event.selected[0]; // Get the selected feature
-            // console.log(selectedFeature);
+        highwayFeature.setStyle(new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: getHighwayColor(highway.type),
+                width: 3
+            })
+        }));
 
-            if (selectedFeature) {
-                const deedName = selectedFeature.get('name');
-                const mayor = selectedFeature.get('mayor');
-                const xCoord = selectedFeature.get('x');
-                const yCoord = selectedFeature.get('y');
-                const lastActive = selectedFeature.get('lastActive');
+        highwayFeatures.push(highwayFeature);
 
-                // Update the details in the HTML
-                document.getElementById('deed-name').innerText = `Name: ${deedName}`;
-                document.getElementById('deed-mayor').innerText = `Mayor: ${mayor}`;
-                document.getElementById('deed-coordinates').innerText = `Coordinates: (${xCoord}, ${yCoord})`;
-                document.getElementById('deed-lastActive').innerText = lastActive ? `${lastActive}` : 'Unknown';
-            }
-        });
+        vectorSource.addFeature(highwayFeature);
+    });
+
+
+    // Add a Select interaction to handle feature clicks
+    const selectInteraction = new ol.interaction.Select({
+        condition: ol.events.condition.click, // Trigger on click
+    });
+
+    // Add the select interaction to the map
+    map.addInteraction(selectInteraction);
+
+    // Listen to the 'select' event and display the feature details
+    selectInteraction.on('select', function (event) {
+        const selectedFeature = event.selected[0]; // Get the selected feature
+        // console.log(selectedFeature);
+
+        if (selectedFeature) {
+            const deedName = selectedFeature.get('name');
+            const mayor = selectedFeature.get('mayor');
+            const xCoord = selectedFeature.get('x');
+            const yCoord = selectedFeature.get('y');
+            const lastActive = selectedFeature.get('lastActive');
+
+            // Update the details in the HTML
+            document.getElementById('deed-name').innerText = `Name: ${deedName}`;
+            document.getElementById('deed-mayor').innerText = `Mayor: ${mayor}`;
+            document.getElementById('deed-coordinates').innerText = `Coordinates: (${xCoord}, ${yCoord})`;
+            document.getElementById('deed-lastActive').innerText = lastActive ? `${lastActive}` : 'Unknown';
+        }
+    });
+
+    document.getElementById('toggleDeeds').addEventListener('click', () =>
+        toggleFeatures(deedFeatures, deedFeaturesVisible)
+    );
 
     document.getElementById('togglePerimeters').addEventListener('click', () =>
         toggleFeatures(perimeterFeatures, perimeterFeaturesVisible)
@@ -283,10 +288,12 @@ function expandBoundingBox(coords, padding) {
 
 let vectorSource = new ol.source.Vector();
 
+let deedFeatures = [];
 let perimeterFeatures = [];
 let towerFeatures = [];
 let highwayFeatures = [];
 
+let deedFeaturesVisible = { value: true };
 let perimeterFeaturesVisible = { value: true };
 let towerFeaturesVisible = { value: true };
 let highwayFeaturesVisible = { value: true };
