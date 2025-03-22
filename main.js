@@ -1,3 +1,5 @@
+import { showDeedFeature } from "./features.js";
+
 document.addEventListener("DOMContentLoaded", function () {
     const apiUrls = [
         'https://web.game.sklotopolis.com/unlimited/2/deeds.json',
@@ -86,8 +88,16 @@ const initailizeMap = () => {
             // Create the inner polygon feature (original deed)
         const deedFeature = new ol.Feature({
             geometry: new ol.geom.Polygon([[topLeft, topRight, bottomRight, bottomLeft, topLeft]]),
+            type: 'deed',
             name: deed.name,
             mayor: deed.mayor,
+            founder: deed.founderName,
+            guards: deed.guards,
+            motto: deed.motto,
+            citizens: deed.amountOfCitizens,
+            alliance: deed.allianceName,
+            isSpawnPoint: deed.isSpawnPoint,
+            created: deed.creationDate,
             x: deed.x,
             y: deed.y,
             lastActive: deed.lastActive,
@@ -107,8 +117,16 @@ const initailizeMap = () => {
         // Create the outer polygon feature (stroke-only)
         const perimeterFeature = new ol.Feature({
             geometry: new ol.geom.Polygon(outerCoords),
+            type: 'deed',
             name: deed.name,
             mayor: deed.mayor,
+            founder: deed.founderName,
+            guards: deed.guards,
+            motto: deed.motto,
+            citizens: deed.amountOfCitizens,
+            alliance: deed.allianceName,
+            isSpawnPoint: deed.isSpawnPoint,
+            created: deed.creationDate,
             x: deed.x,
             y: deed.y,
             lastActive: deed.lastActive,
@@ -202,7 +220,12 @@ const initailizeMap = () => {
         const selectedFeature = event.selected[0]; // Get the selected feature
         // console.log(selectedFeature);
 
-        if (selectedFeature) {
+        const type = selectedFeature.get('type');
+
+        if (type === 'deed') {
+            showDeedFeature(selectedFeature);
+        } else {
+
             const deedName = selectedFeature.get('name');
             const mayor = selectedFeature.get('mayor');
             const xCoord = selectedFeature.get('x');
