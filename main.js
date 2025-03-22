@@ -162,6 +162,29 @@ const initailizeMap = () => {
             vectorSource.addFeature(towerFeature);
         });
 
+        highways.forEach(highway => {
+            const startX = highway.startX;
+            const startY = 4096 - highway.startY;
+            const endX = highway.endX;
+            const endY = 4096 - highway.endY;
+
+            const highwayFeature = new ol.Feature({
+                geometry: new ol.geom.LineString([[startX, startY], [endX, endY]]),
+                type: 'highway',
+            });
+
+            highway.type
+
+            highwayFeature.setStyle(new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: getHighwayColor(highway.type),
+                    width: 3
+                })
+            }));
+
+            vectorSource.addFeature(highwayFeature);
+        });
+
 
         // Add a Select interaction to handle feature clicks
         const selectInteraction = new ol.interaction.Select({
@@ -230,6 +253,16 @@ const getControls = () => {
     ];
 
     return controls;
+}
+
+const getHighwayColor = (type) =>{
+    switch (type) {
+        case '0': return 'rgba(0, 0, 0, 0.8)'; // bridge 0
+        case '1': return 'rgba(255, 0, 0, 0.8)'; // tunnel 1
+        case '2': return 'rgba(184, 184, 184, 0.8)'; // regular road 2
+        case '3': return 'rgba(0, 0, 255, 0.8)';  // tunnel boat canal 3
+        default: return 'rgba(255, 255, 255, 0.8)';
+    }
 }
 
 function expandBoundingBox(coords, padding) {
