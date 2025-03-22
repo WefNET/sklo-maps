@@ -72,7 +72,7 @@ const initailizeMap = () => {
         }),
     });
 
-   deeds.forEach(deed => {
+    deeds.forEach(deed => {
             // Scale and flip the coordinates based on the map's extent
             const centerX = deed.x;
             const centerY = 4096 - deed.y; // Scale and flip y coordinate for 8192 size
@@ -182,6 +182,8 @@ const initailizeMap = () => {
                 })
             }));
 
+            highwayFeatures.push(highwayFeature);
+
             vectorSource.addFeature(highwayFeature);
         });
 
@@ -214,12 +216,16 @@ const initailizeMap = () => {
             }
         });
 
-    document.getElementById('togglePerimeters').addEventListener('click', () => 
+    document.getElementById('togglePerimeters').addEventListener('click', () =>
         toggleFeatures(perimeterFeatures, perimeterFeaturesVisible)
     );
 
-    document.getElementById('toggleTowers').addEventListener('click', () => 
+    document.getElementById('toggleTowers').addEventListener('click', () =>
         toggleFeatures(towerFeatures, towerFeaturesVisible)
+    );
+
+    document.getElementById('toggleHighways').addEventListener('click', () =>
+        toggleFeatures(highwayFeatures, highwayFeaturesVisible)
     );
 }
 
@@ -279,11 +285,23 @@ let vectorSource = new ol.source.Vector();
 
 let perimeterFeatures = [];
 let towerFeatures = [];
+let highwayFeatures = [];
 
 let perimeterFeaturesVisible = { value: true };
 let towerFeaturesVisible = { value: true };
+let highwayFeaturesVisible = { value: true };
 
-function toggleFeatures(featureArray, isVisible) {
+const updateButtonState = (button, state) => {
+    if (state.value) {
+        button.classList.add("active");
+        button.classList.remove("inactive");
+    } else {
+        button.classList.add("inactive");
+        button.classList.remove("active");
+    }
+}
+
+const toggleFeatures = (featureArray, isVisible) => {
     if (isVisible.value) {
         featureArray.forEach(feature => vectorSource.removeFeature(feature));
     } else {

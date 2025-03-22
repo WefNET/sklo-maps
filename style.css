@@ -3,9 +3,18 @@ html, body {
     padding: 0;
     height: 100%;
     width: 100%;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 #map {
     width: 100%;
     height: 100vh; /* Full viewport height */
+}
+
+button {
+    padding: 5px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
