@@ -18,3 +18,12 @@ button {
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+
+#details > h4:nth-child(1) {
+    margin-top: 0;
+}
+
+#details > p {
+    font-size: 13px;
+    margin: 6px 0;
+}

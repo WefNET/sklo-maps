@@ -1,17 +1,4 @@
 export const showDeedFeature = (deedFeature) => {
-    // name: deed.name,
-    // mayor: deed.mayor,
-    // founder: deed.founderName,
-    // guards: deed.guards,
-    // motto: deed.motto,
-    // citizens: deed.amountOfCitizens,
-    // alliance: deed.allianceName,
-    // isSpawnPoint: deed.isSpawnPoint,
-    // created: deed.creationDate,
-    // x: deed.x,
-    // y: deed.y,
-    // lastActive: deed.lastActive,
-
     const deedName = deedFeature.get('name');
     const mayor = deedFeature.get('mayor');
     const xCoord = deedFeature.get('x');
@@ -33,6 +20,27 @@ export const showDeedFeature = (deedFeature) => {
         <p><strong>Coordinates:</strong> (${xCoord}, ${yCoord})</p>
         <p><strong>Founded:</strong> ${foundedDateStr}</p>
         <p>${lastActive}</p>
+    `;
+
+    const detailsDiv = document.getElementById('details');
+        detailsDiv.style.opacity = 0; // Fade out
+        setTimeout(() => {
+            detailsDiv.innerHTML = detailsHTML;
+            detailsDiv.style.opacity = 1; // Fade in new content
+        }, 50);
+}
+
+export const showTowerFeature = (towerFeature) => {
+    const towerName = towerFeature.get('name');
+    const creator = towerFeature.get('creator');
+    const xCoord = towerFeature.get('x');
+    const yCoord = towerFeature.get('y');
+
+    // Base information
+    let detailsHTML = `
+        <h4>🗼 ${towerName}</h4>
+        <p><strong>Created by:</strong> ${creator}</p>
+        <p><strong>Coordinates:</strong> (${xCoord}, ${yCoord})</p>
     `;
 
     const detailsDiv = document.getElementById('details');

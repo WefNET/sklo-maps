@@ -1,4 +1,4 @@
-import { showDeedFeature } from "./features.js";
+import { showDeedFeature, showTowerFeature } from "./features.js";
 
 document.addEventListener("DOMContentLoaded", function () {
     const apiUrls = [
@@ -224,19 +224,10 @@ const initailizeMap = () => {
 
         if (type === 'deed') {
             showDeedFeature(selectedFeature);
+        } else if (type === 'tower') {
+            showTowerFeature(selectedFeature);
         } else {
-
-            const deedName = selectedFeature.get('name');
-            const mayor = selectedFeature.get('mayor');
-            const xCoord = selectedFeature.get('x');
-            const yCoord = selectedFeature.get('y');
-            const lastActive = selectedFeature.get('lastActive');
-
-            // Update the details in the HTML
-            document.getElementById('deed-name').innerText = `Name: ${deedName}`;
-            document.getElementById('deed-mayor').innerText = `Mayor: ${mayor}`;
-            document.getElementById('deed-coordinates').innerText = `Coordinates: (${xCoord}, ${yCoord})`;
-            document.getElementById('deed-lastActive').innerText = lastActive ? `${lastActive}` : 'Unknown';
+            console.log("Unknown feature type:", type);
         }
     });
 
