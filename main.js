@@ -1,4 +1,26 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const apiUrls = [
+        'https://web.game.sklotopolis.com/unlimited/2/deeds.json',
+        'https://web.game.sklotopolis.com/unlimited/2/towers.json',
+        'https://web.game.sklotopolis.com/unlimited/2/highways.json',
+        'https://web.game.sklotopolis.com/unlimited/2/poi.json'
+    ];
+
+    // Wait for all scripts to load before running initializeApp
+    Promise.all(apiUrls.map(loadScript))
+        .then(() => {
+            console.log("All APIs loaded successfully!");
+            initailizeMap();
+        })
+        .catch(error => console.error("Error loading scripts:", error));
+});
+
+const initailizeMap = () => {
+    console.log("Deeds:", deeds);
+    console.log("Towers:", guard_towers);
+    console.log("Highways:", highways);
+    console.log("POIs:", poi);
+
     const zoomLevels = [1024, 2048, 4096, 8192]; // Actual zoom levels used in URLs
     const tileSize = 256; // Each tile is 256x256 pixels
     const maxMapSize = 4096; // Largest zoom level (full map size)
@@ -50,15 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }),
     });
 
-    fetch('./deeds.json') // Local path to your deeds.json
-    .then(response => response.text()) // Get response as text
-    .then(text => {
-        const jsonMatch = text.match(/\[.*\]/s); // Match everything inside square brackets
-        if (!jsonMatch) throw new Error("Invalid JSON format");
-
-        const jsonData = JSON.parse(jsonMatch[0]);
-
-        jsonData.forEach(deed => {
+   deeds.forEach(deed => {
             // Scale and flip the coordinates based on the map's extent
             const centerX = deed.x;
             const centerY = 4096 - deed.y; // Scale and flip y coordinate for 8192 size
@@ -118,18 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
             vectorSource.addFeature(perimeterFeature);
         });
 
-    })
-    .catch(error => console.error("Error loading deed data:", error));
-
-    fetch('./towers.json')
-    .then(response => response.text())
-    .then(text => {
-        const jsonMatch = text.match(/\[.*\]/s);
-        if (!jsonMatch) throw new Error("Invalid JSON format");
-
-        const jsonData = JSON.parse(jsonMatch[0]);
-
-        jsonData.forEach(tower => {
+        guard_towers.forEach(tower => {
             const centerX = tower.x;
             const centerY = 4096 - tower.y;
 
@@ -158,8 +161,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             vectorSource.addFeature(towerFeature);
         });
-    })
-    .catch(error => console.error("Error loading tower data:", error));
 
 
         // Add a Select interaction to handle feature clicks
@@ -173,7 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Listen to the 'select' event and display the feature details
         selectInteraction.on('select', function (event) {
             const selectedFeature = event.selected[0]; // Get the selected feature
-            console.log(selectedFeature);
+            // console.log(selectedFeature);
 
             if (selectedFeature) {
                 const deedName = selectedFeature.get('name');
@@ -197,7 +198,21 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('toggleTowers').addEventListener('click', () => 
         toggleFeatures(towerFeatures, towerFeaturesVisible)
     );
-});
+}
+
+const loadScript = (url) => {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => {
+            console.log(`Loaded: ${url}`);
+            resolve(); // Resolve the promise when the script loads
+        };
+
+        script.onerror = () => reject(`Failed to load ${url}`);
+        document.body.appendChild(script);
+    });
+}
 
 const getControls = () => {
     var controls = [
