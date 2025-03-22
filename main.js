@@ -116,8 +116,8 @@ const initailizeMap = () => {
 
             perimeterFeature.setStyle(new ol.style.Style({
                 stroke: new ol.style.Stroke({
-                    color: 'rgba(255, 72, 0, 0.8)',
-                    width: 2, // Width of stroke
+                    color: 'rgba(255, 0, 0, 0.44)',
+                    width: 1, // Width of stroke
                 }),
                 fill: new ol.style.Fill({
                     color: 'rgba(0, 0, 0, 0)' // Fully transparent fill
