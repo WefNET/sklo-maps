@@ -1,5 +1,18 @@
 import { showDeedFeature, showTowerFeature } from "./features.js";
 
+let vectorSource = new ol.source.Vector();
+
+let deedFeatures = [];
+let perimeterFeatures = [];
+let towerFeatures = [];
+let highwayFeatures = [];
+
+let deedFeaturesVisible = { value: true };
+let perimeterFeaturesVisible = { value: true };
+let towerFeaturesVisible = { value: true };
+let highwayFeaturesVisible = { value: true };
+
+// Wait for the DOM to load before running the app
 document.addEventListener("DOMContentLoaded", function () {
     const apiUrls = [
         'https://web.game.sklotopolis.com/unlimited/2/deeds.json',
@@ -13,6 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(() => {
             console.log("All APIs loaded successfully!");
             initailizeMap();
+            extractDeedData();
         })
         .catch(error => console.error("Error loading scripts:", error));
 });
@@ -23,37 +37,7 @@ const initailizeMap = () => {
     console.log("Highways:", highways);
     console.log("POIs:", poi);
 
-    const zoomLevels = [1024, 2048, 4096, 8192]; // Actual zoom levels used in URLs
-    const tileSize = 256; // Each tile is 256x256 pixels
-    const maxMapSize = 4096; // Largest zoom level (full map size)
-
-    // Compute resolutions (pixels per tile) based on maxMapSize
-    const resolutions = zoomLevels.map(z => maxMapSize / z);
-
-    const tileGrid = new ol.tilegrid.TileGrid({
-        resolutions: resolutions,
-        tileSize: tileSize, // 256x256 tiles
-        extent: [0, 0, maxMapSize, maxMapSize], // Full map extent
-    });
-
-
-    const tileLayer = new ol.layer.Tile({
-        source: new ol.source.XYZ({
-            tileGrid: tileGrid,
-            wrapX: false,
-            tilePixelRatio: 1,
-            tileUrlFunction: function (tileCoord) {
-                let z = tileCoord[0];
-                let x = tileCoord[1];
-                let y = tileCoord[2];
-
-                if (x < 0 || y < 0) return "";
-
-                let zoom = zoomLevels[z];
-                return `https://web.game.sklotopolis.com/unlimited/2/tiles-flat/tile_${zoom}_${x}_${y}.png`;
-            },
-        }),
-    });
+    const { tileLayer, resolutions, maxMapSize } = getXYZTileLayer();
 
     // Vector Layer to display the deed markers
     const vectorLayer = new ol.layer.Vector({
@@ -321,6 +305,94 @@ const getControls = () => {
     return controls;
 }
 
+const getXYZTileLayer = () =>{
+    const zoomLevels = [1024, 2048, 4096, 8192]; // Actual zoom levels used in URLs
+    const tileSize = 256; // Each tile is 256x256 pixels
+    const maxMapSize = 4096; // Largest zoom level (full map size)
+
+    // Compute resolutions (pixels per tile) based on maxMapSize
+    const resolutions = zoomLevels.map(z => maxMapSize / z);
+
+    const tileGrid = new ol.tilegrid.TileGrid({
+        resolutions: resolutions,
+        tileSize: tileSize, // 256x256 tiles
+        extent: [0, 0, maxMapSize, maxMapSize], // Full map extent
+    });
+
+
+    const tileLayer = new ol.layer.Tile({
+        source: new ol.source.XYZ({
+            tileGrid: tileGrid,
+            wrapX: false,
+            tilePixelRatio: 1,
+            tileUrlFunction: function (tileCoord) {
+                let z = tileCoord[0];
+                let x = tileCoord[1];
+                let y = tileCoord[2];
+
+                if (x < 0 || y < 0) return "";
+
+                let zoom = zoomLevels[z];
+                return `https://web.game.sklotopolis.com/unlimited/2/tiles-flat/tile_${zoom}_${x}_${y}.png`;
+            },
+        }),
+    });
+
+    return {tileLayer, resolutions, maxMapSize};
+}
+
+const extractDeedData = () => {
+    // Count occurrences of each alliance
+    const allianceCounts = deeds.reduce((acc, town) => {
+        if (town.allianceName) {
+            acc[town.allianceName] = (acc[town.allianceName] || 0) + 1;
+        }
+        return acc;
+    }, {});
+
+    // Sort alliances by count (highest first)
+    const sortedAlliances = Object.entries(allianceCounts)
+        .sort((a, b) => b[1] - a[1]); // Sort by count in descending order
+
+    // console.log("Sorted alliances:", sortedAlliances);
+
+    const allianceSelect = document.getElementById("allianceFilter");
+
+    // Clear existing options
+    allianceSelect.innerHTML = "";
+
+    // Add a default option
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Select an Alliance";
+    allianceSelect.appendChild(defaultOption);
+
+    // Populate dropdown with sorted alliances and their counts
+    sortedAlliances.forEach(([alliance, count]) => {
+        const option = document.createElement("option");
+        option.value = alliance;
+        option.textContent = `${alliance} (${count})`; // Display name with count
+        allianceSelect.appendChild(option);
+    });
+
+    // Event listener for alliance selection
+    allianceSelect.addEventListener("change", function() {
+        const selectedAlliance = this.value;
+
+        // console.log("Selected alliance:", selectedAlliance);
+
+        deedFeatures.forEach(feature => {
+            const isSelected = feature.get("alliance") === selectedAlliance;
+            const fillColor = isSelected ? 'rgba(255, 165, 0, 0.6)' : 'rgba(214, 226, 223, 0.3)'; // Orange if selected, default otherwise
+
+            feature.setStyle(new ol.style.Style({
+                fill: new ol.style.Fill({ color: fillColor })
+            }));
+        });
+    });
+};
+
+
 const getHighwayColor = (type) =>{
     switch (type) {
         case '0': return 'rgba(0, 0, 0, 0.8)'; // bridge 0
@@ -341,17 +413,7 @@ function expandBoundingBox(coords, padding) {
     ]);
 }
 
-let vectorSource = new ol.source.Vector();
 
-let deedFeatures = [];
-let perimeterFeatures = [];
-let towerFeatures = [];
-let highwayFeatures = [];
-
-let deedFeaturesVisible = { value: true };
-let perimeterFeaturesVisible = { value: true };
-let towerFeaturesVisible = { value: true };
-let highwayFeaturesVisible = { value: true };
 
 const updateButtonState = (button, state) => {
     if (state.value) {
